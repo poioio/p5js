@@ -581,8 +581,7 @@ function drawCafeIn() {
   // 테이블 위 물건들
   // 왼쪽 컵
   fill(173, 216, 230);
-  stroke(0);
-  strokeWeight(1);
+  noStroke();
   rect(width / 2 - 60, height - 195, 15, 25, 3);
   rect(width / 2 - 68, height - 190, 8, 15, 2);
 
@@ -597,8 +596,7 @@ function drawCafeIn() {
 
   // 오른쪽 컵
   fill(173, 216, 230);
-  stroke(0);
-  strokeWeight(1);
+  noStroke();
   rect(width / 2 + 40, height - 195, 15, 25, 3);
   rect(width / 2 + 55, height - 190, 8, 15, 2);
 
