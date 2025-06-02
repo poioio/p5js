@@ -101,7 +101,7 @@ let creditsTimer = 0;
 const CREDITS_DURATION = 5000; // 5초 동안 표시
 
 function setup() {
-  createCanvas(windowWidth, windowHeight);
+  createCanvas(800, 600);
   characterX3 = width / 2;
   notificationStartX = width / 2 - 25;
   notificationEndX = width * 2 / 3;
