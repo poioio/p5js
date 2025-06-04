@@ -175,6 +175,16 @@ function drawScene1() {
 
   if (characterX1 < width + 100) {
     drawCharacter(characterX1, walkCycle1, isCheckingPhone);
+    
+    // 안내 문구 표시 (두 줄로)
+    if (!isWalking1) {
+      fill(0);
+      noStroke();
+      textAlign(CENTER);
+      textSize(15);
+      text('방향키를 눌러', characterX1 + 50, height - 80 - 55 - 100);
+      text('오른쪽으로 이동하세요!', characterX1 + 50, height - 80 - 55 - 80);
+    }
   }
 
   if ((isWalking1 && !isStopped) || hasCheckedPhone) {
@@ -278,6 +288,13 @@ function drawScene4() {
   drawBusInterior();
   drawCharacter4();
   
+  // 하차벨 안내 문구 표시
+  fill(0);
+  noStroke();
+  textAlign(CENTER);
+  textSize(15);
+  text('하차벨을 클릭해 버스에서 내리세요!', width/2, height - 350);
+  
   // 걷기 애니메이션 및 배경 스크롤 업데이트
   if (!isSitting4) {
     walkCycle4 += 0.1;
@@ -301,6 +318,15 @@ function drawScene5() {
   drawWalkingPath(scrollX4, color(200));
   drawEmojis5();
   drawCharacter5();
+  
+  // 카페 안내 문구 표시 (캐릭터가 멈췄을 때만)
+  if (isInMiddle5) {
+    fill(0);
+    noStroke();
+    textAlign(CENTER);
+    textSize(15);
+    text('카페 건물을 클릭해 카페 안으로 들어가세요!', width/2, height - 430);
+  }
   
   if (isWalking5) {
     walkCycle5 += 0.1;
@@ -331,13 +357,28 @@ function drawScene6() {
   // 캐릭터 그리기
   if (!isSitting6) {
     drawCharacter6();
+    // 걷기 애니메이션 업데이트
+    if (isWalking6) {
+      walkCycle6 += 0.1;
+      if (!isInMiddle6) {
+        characterX6 += NORMAL_SPEED;
+      }
+      
+      // 왼쪽 의자 위치에 도착 체크
+      if (characterX6 >= width/2 - 150 && !isInMiddle6) {
+        isInMiddle6 = true;
+        isSitting6 = true;
+        sittingTimer = 0;
+        speechBubbleTimer = 0; // 말풍선 타이머도 초기화
+      }
+    }
   } else {
     drawSittingCharacter6();
     // 앉은 후 타이머 시작
     if (sittingTimer === 0) {
       sittingTimer = millis();
     }
-    // 1초 후 화살표 표시 (2초에서 1초로 변경)
+    // 1초 후 안내 문구 표시
     if (!showArrow && !showSpeechBubble && millis() - sittingTimer > 1000) {
       showArrow = true;
     }
@@ -346,9 +387,13 @@ function drawScene6() {
   // 친구 캐릭터 그리기
   drawFriend();
   
-  // 친구 캐릭터 화살표 그리기
+  // 안내 문구 표시 (화살표 대신)
   if (showArrow && !showSpeechBubble) {
-    drawArrow();
+    fill(0);
+    noStroke();
+    textAlign(CENTER);
+    textSize(15);
+    text('친구를 클릭해보세요!', width/2 + 155, height - 255);
   }
   
   // 말풍선 그리기
@@ -358,31 +403,50 @@ function drawScene6() {
     if (speechBubbleTimer === 0) {
       speechBubbleTimer = millis();
     }
-    // 2초 후 캐릭터 화살표 표시
-    if (!showCharacterArrow && millis() - speechBubbleTimer > 2000) {
+    // 1초 후 캐릭터 클릭 안내 문구 표시
+    if (!showCharacterArrow && millis() - speechBubbleTimer > 1000) {
       showCharacterArrow = true;
     }
   }
   
-  // 캐릭터 화살표 그리기
+  // 캐릭터 말풍선과 안내 문구 그리기
   if (showCharacterArrow) {
-    drawCharacterArrow();
-  }
-  
-  // 걷기 애니메이션 업데이트
-  if (isWalking6 && !isSitting6) {
-    walkCycle6 += 0.1;
-    if (!isInMiddle6) {
-      characterX6 += NORMAL_SPEED;
-    }
+    const characterX = width/2 - 130;
+    const characterY = height - 105;
     
-    // 왼쪽 의자 위치에 도착 체크
-    if (characterX6 >= width/2 - 150 && !isInMiddle6) {
-      isInMiddle6 = true;
-      isSitting6 = true;
-      sittingTimer = 0;
-      speechBubbleTimer = 0; // 말풍선 타이머도 초기화
-    }
+    push();
+    translate(characterX - 100, characterY - 120);
+    
+    // 말풍선 본체
+    fill(255);
+    stroke(0);
+    strokeWeight(2);
+    rect(0, -40, 80, 40, 10);
+    
+    // 말풍선 꼬리
+    fill(255);
+    noStroke();
+    beginShape();
+    vertex(0, 0);
+    vertex(20, -20);
+    vertex(0, -40);
+    endShape(CLOSE);
+    
+    // 말풍선 텍스트
+    fill(0);
+    noStroke();
+    textAlign(CENTER, CENTER);
+    textSize(14);
+    text("......", 40, -20);
+    
+    // 안내 문구 (말풍선 아래에 표시)
+    fill(0);
+    noStroke();
+    textAlign(CENTER);
+    textSize(15);
+    text('캐릭터를 클릭해보세요!', 40, 20);
+    
+    pop();
   }
 }
 
@@ -396,6 +460,20 @@ function drawScene7() {
     drawCharacter7();
   } else {
     drawLyingCharacter7();
+    
+    // 캐릭터가 누운 후 타이머 시작
+    if (lyingTimer === 0) {
+      lyingTimer = millis();
+    }
+    
+    // 2초 후 안내 문구 표시
+    if (millis() - lyingTimer > 2000) {
+      fill(255); // 흰색
+      noStroke();
+      textAlign(CENTER);
+      textSize(15);
+      text('캐릭터를 클릭해보세요!', width/3 + 180, height - 300); // 캐릭터 위치에서 200픽셀 위
+    }
   }
   
   // 걷기 애니메이션 업데이트
@@ -406,6 +484,7 @@ function drawScene7() {
     // 침대 가운데에 도착 체크
     if (characterX7 >= width/3 + 112) {  // 침대 가운데 위치
       isLying7 = true;
+      lyingTimer = 0; // 타이머 초기화
     }
   }
 }
@@ -415,18 +494,12 @@ function drawScene8() {
   drawBed8();
   drawLyingCharacter8();
   
-  // 캐릭터 클릭 처리
-  if (isLying7) {
-    const characterX = width/2;
-    const characterY = height/2;
-    const clickRadius = 50;
-    
-    if (dist(mouseX, mouseY, characterX, characterY - 45) < clickRadius) {
-      currentScene = 9;
-      creditsTimer = millis();
-      return;
-    }
-  }
+  // 안내 문구 표시
+  fill(255); // 흰색
+  noStroke();
+  textAlign(RIGHT);
+  textSize(15);
+  text('enter 키를 누르면 엔딩크레딧으로 넘어갑니다', width - 20, height - 20);
 }
 
 function drawScene9() {
@@ -581,7 +654,8 @@ function drawCafeIn() {
   // 테이블 위 물건들
   // 왼쪽 컵
   fill(173, 216, 230);
-  noStroke();
+  stroke(0);
+  strokeWeight(1);
   rect(width / 2 - 60, height - 195, 15, 25, 3);
   rect(width / 2 - 68, height - 190, 8, 15, 2);
 
@@ -596,7 +670,8 @@ function drawCafeIn() {
 
   // 오른쪽 컵
   fill(173, 216, 230);
-  noStroke();
+  stroke(0);
+  strokeWeight(1);
   rect(width / 2 + 40, height - 195, 15, 25, 3);
   rect(width / 2 + 55, height - 190, 8, 15, 2);
 
@@ -1287,24 +1362,17 @@ function mousePressed() {
       return;
     }
   }
-  
-  // 캐릭터 클릭 처리 (Scene 8)
-  if (currentScene === 8) {
-    const characterX = width/2;
-    const characterY = height/2;
-    const clickRadius = 50;
-    
-    if (dist(mouseX, mouseY, characterX, characterY - 45) < clickRadius) {
-      currentScene = 9;
-      creditsTimer = millis();
-      return;
-    }
-  }
 }
 
 function keyPressed() {
   if (keyCode === RIGHT_ARROW && currentScene === 1 && !isWalking1) {
     isWalking1 = true;
+  }
+  
+  // 엔터키로 엔딩 크레딧으로 전환 (장면 8)
+  if (keyCode === ENTER && currentScene === 8) {
+    currentScene = 9;
+    creditsTimer = millis();
   }
 }
 
@@ -1378,7 +1446,7 @@ function drawSideView() {
   stroke(0);
   strokeWeight(2);
   rectMode(CENTER);
-  rect(0, 0, 10, 20, 5);
+  rect(5, 7, 10, 20, 5);
   pop();
   pop();
   
@@ -1543,7 +1611,7 @@ function drawCharacterArrow() {
   const arrowAngle = PI/4; // 친구 캐릭터 화살표와 반대 각도로 설정
   
   push();
-  translate(characterX - 100, characterY - 160); // 화살표 시작 위치를 더 왼쪽으로 조정 (50 -> 100)
+  translate(characterX - 100, characterY - 140); // -160에서 -140으로 변경하여 20픽셀 아래로 이동
   rotate(arrowAngle);
   
   // 화살표 몸통
