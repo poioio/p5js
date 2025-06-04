@@ -58,6 +58,7 @@ let isSitting4 = false;
 let characterX5 = 50;
 let isWalking5 = true;
 let walkCycle5 = 0;
+let scrollX5=0;
 let isInMiddle5 = false;
 let icons5 = [];
 const NUM_ICONS5 = 10;
@@ -71,10 +72,9 @@ let isWalking6 = true;
 let walkCycle6 = 0;
 let isInMiddle6 = false;
 let isSitting6 = false;
-let showArrow = false; // 친구 캐릭터 화살표
+let showText = false; // 친구 안
 let showSpeechBubble = false;
 let sittingTimer = 0;
-let showCharacterArrow = false; // 캐릭터 화살표
 let speechBubbleTimer = 0; // 말풍선 타이머
 
 // 장면7 변수 (침대가 있는 방)
@@ -174,7 +174,7 @@ function drawScene1() {
   if (showNotification) drawNotification(characterX1);
 
   if (characterX1 < width + 100) {
-    drawCharacter(characterX1, walkCycle1, isCheckingPhone);
+    drawCharacter(characterX1, walkCycle1, isCheckingPhone || hasCheckedPhone);
     
     // 안내 문구 표시 (두 줄로)
     if (!isWalking1) {
@@ -222,6 +222,7 @@ function drawScene1() {
   }
 }
 
+
 function drawScene2() {
   background(255, 255, 100);
   drawWalkingPath(scrollX2, color(255, 255, 0));
@@ -236,7 +237,7 @@ function drawScene2() {
   }
 
   if (characterX2 < width + 100) {
-    drawCharacter(characterX2, walkCycle2, false);
+    drawCharacter(characterX2, walkCycle2, true);  // 항상 핸드폰을 보도록 true 설정
   }
 
   if (isWalking2) {
@@ -258,10 +259,10 @@ function drawScene3() {
     }
   }
 
-  drawWalkingPath(scrollX3, color(200));
+  drawWalkingPath(scrollX3, color(255, 255, 0));  // 타일 색상을 노란색으로 변경
   drawBusEx();
   drawEmojis3();
-  drawCharacter(characterX3, walkCycle3, true);
+  drawCharacter(characterX3, 0, true);
   
   // 버스가 멈췄을 때 안내 문구 표시
   if (isBusStopped) {
@@ -271,22 +272,19 @@ function drawScene3() {
     textSize(15);
     text("버스를 클릭해보세요!", width/2, height - 250);
   }
-  
-  // 걷기 애니메이션 및 배경 스크롤 업데이트
-  if (!isBusStopped) {
-    walkCycle3 += 0.1;
-    scrollX3 += SCROLL_SPEED;
-    if(scrollX3 > TILE_SIZE) {
-      scrollX3 = 0;
-    }
-  }
 }
 
 function drawScene4() {
   background(240);
   
   drawBusInterior();
-  drawCharacter4();
+  
+  // 캐릭터 그리기
+  if (!isSitting4) {
+    drawCharacter(characterX4, walkCycle4, true);  // 앉기 전까지는 핸드폰을 보면서 걷기
+  } else {
+    drawCharacter4();
+  }
   
   // 하차벨 안내 문구 표시
   fill(0);
@@ -315,9 +313,15 @@ function drawScene5() {
   background(255, 230, 0);
   
   drawCafeEx();
-  drawWalkingPath(scrollX4, color(200));
+  drawWalkingPath(scrollX5, color(255, 230, 0));  // 타일 색상을 배경색과 동일하게 변경
   drawEmojis5();
-  drawCharacter5();
+  
+  // 캐릭터 그리기
+  if (!isInMiddle5) {
+    drawCharacter(characterX5, walkCycle5, true);  // 카페 앞에 도착하기 전까지는 핸드폰을 보면서 걷기
+  } else {
+    drawCharacter5();
+  }
   
   // 카페 안내 문구 표시 (캐릭터가 멈췄을 때만)
   if (isInMiddle5) {
@@ -332,6 +336,10 @@ function drawScene5() {
     walkCycle5 += 0.1;
     if (!isInMiddle5) {
       characterX5 += NORMAL_SPEED;
+      scrollX5 += NORMAL_SPEED;  // 배경 스크롤 추가
+      if (scrollX5 > TILE_SIZE) {
+        scrollX5 = 0;
+      }
     }
     
     if (characterX5 >= width/2 - 25 && !isInMiddle5) {
@@ -350,45 +358,34 @@ function drawScene5() {
   }
 }
 
+
 function drawScene6() {
   background(220);
   drawCafeIn();
   
   // 캐릭터 그리기
   if (!isSitting6) {
-    drawCharacter6();
-    // 걷기 애니메이션 업데이트
-    if (isWalking6) {
-      walkCycle6 += 0.1;
-      if (!isInMiddle6) {
-        characterX6 += NORMAL_SPEED;
-      }
-      
-      // 왼쪽 의자 위치에 도착 체크
-      if (characterX6 >= width/2 - 150 && !isInMiddle6) {
-        isInMiddle6 = true;
-        isSitting6 = true;
-        sittingTimer = 0;
-        speechBubbleTimer = 0; // 말풍선 타이머도 초기화
-      }
-    }
+    drawCharacter(characterX6, walkCycle6, true);  // 의자에 앉기 전까지는 핸드폰을 보면서 걷기
   } else {
     drawSittingCharacter6();
-    // 앉은 후 타이머 시작
-    if (sittingTimer === 0) {
-      sittingTimer = millis();
-    }
-    // 1초 후 안내 문구 표시
-    if (!showArrow && !showSpeechBubble && millis() - sittingTimer > 1000) {
-      showArrow = true;
-    }
   }
   
   // 친구 캐릭터 그리기
   drawFriend();
   
-  // 안내 문구 표시 (화살표 대신)
-  if (showArrow && !showSpeechBubble) {
+  // 앉은 후 타이머 시작
+  if (isSitting6) {
+    if (sittingTimer === 0) {
+      sittingTimer = millis();
+    }
+    // 1초 후 안내 문구 표시
+    if (!showText && !showSpeechBubble && millis() - sittingTimer > 1000) {
+      showText = true;
+    }
+  }
+  
+  // 안내 문구 표시
+  if (showText && !showSpeechBubble) {
     fill(0);
     noStroke();
     textAlign(CENTER);
@@ -398,55 +395,67 @@ function drawScene6() {
   
   // 말풍선 그리기
   if (showSpeechBubble) {
+    // 친구 말풍선 그리기
     drawSpeechBubble();
+    
     // 말풍선이 나타난 후 타이머 시작
     if (speechBubbleTimer === 0) {
       speechBubbleTimer = millis();
     }
-    // 1초 후 캐릭터 클릭 안내 문구 표시
-    if (!showCharacterArrow && millis() - speechBubbleTimer > 1000) {
-      showCharacterArrow = true;
+    
+    // 2초 후 캐릭터 말풍선 표시
+    if (millis() - speechBubbleTimer > 2000) {
+      const characterX = width/2 - 130;
+      const characterY = height - 105;
+      
+      // 캐릭터 말풍선 그리기
+      push();
+      translate(characterX - 110, characterY - 120);  // x 위치를 +50으로 조정하여 오른쪽으로 이동
+      
+      // 말풍선 본체
+      fill(255);
+      noStroke();
+      rect(0, -40, 80, 40, 10);
+      
+      // 말풍선 텍스트
+      fill(0);
+      noStroke();
+      textAlign(CENTER, CENTER);
+      textSize(14);
+      text("......", 40, -20);
+      pop();
+      
+      // 캐릭터 말풍선이 나타난 후 안내 문구 표시
+      if (millis() - speechBubbleTimer > 4000) {  // 친구 말풍선 2초 + 캐릭터 말풍선 2초 후
+        push();
+        translate(characterX - 130, characterY - 80);  // 안내 문구도 말풍선과 같은 x 위치로 조정
+        
+        // 안내 문구
+        fill(0);
+        noStroke();
+        textAlign(CENTER);
+        textSize(15);
+        text('캐릭터를 클릭하면', 0, -10);
+        text('다음 장면으로 넘어갑니다!', 0, 10);
+        pop();
+      }
     }
   }
   
-  // 캐릭터 말풍선과 안내 문구 그리기
-  if (showCharacterArrow) {
-    const characterX = width/2 - 130;
-    const characterY = height - 105;
+  // 걷기 애니메이션 업데이트
+  if (isWalking6) {
+    walkCycle6 += 0.1;
+    if (!isInMiddle6) {
+      characterX6 += NORMAL_SPEED;
+    }
     
-    push();
-    translate(characterX - 100, characterY - 120);
-    
-    // 말풍선 본체
-    fill(255);
-    stroke(0);
-    strokeWeight(2);
-    rect(0, -40, 80, 40, 10);
-    
-    // 말풍선 꼬리
-    fill(255);
-    noStroke();
-    beginShape();
-    vertex(0, 0);
-    vertex(20, -20);
-    vertex(0, -40);
-    endShape(CLOSE);
-    
-    // 말풍선 텍스트
-    fill(0);
-    noStroke();
-    textAlign(CENTER, CENTER);
-    textSize(14);
-    text("......", 40, -20);
-    
-    // 안내 문구 (말풍선 아래에 표시)
-    fill(0);
-    noStroke();
-    textAlign(CENTER);
-    textSize(15);
-    text('캐릭터를 클릭해보세요!', 40, 20);
-    
-    pop();
+    // 왼쪽 의자 위치에 도착 체크
+    if (characterX6 >= width/2 - 150 && !isInMiddle6) {
+      isInMiddle6 = true;
+      isSitting6 = true;
+      sittingTimer = 0;
+      speechBubbleTimer = 0; // 말풍선 타이머도 초기화
+    }
   }
 }
 
@@ -457,7 +466,7 @@ function drawScene7() {
   
   // 캐릭터 그리기
   if (!isLying7) {
-    drawCharacter7();
+    drawCharacter(characterX7, walkCycle7, true);  // 침대에 눕기 전까지는 핸드폰을 보면서 걷기
   } else {
     drawLyingCharacter7();
     
@@ -472,7 +481,7 @@ function drawScene7() {
       noStroke();
       textAlign(CENTER);
       textSize(15);
-      text('캐릭터를 클릭해보세요!', width/3 + 180, height - 300); // 캐릭터 위치에서 200픽셀 위
+      text('캐릭터를 클릭해보세요!', width/3 + 180, height - 300);
     }
   }
   
@@ -781,7 +790,7 @@ function drawArm(x, y, angle, color = 255) {
 }
 
 function drawWalkingPath(scrollX, tileColor) {
-  fill(tileColor);
+  fill(tileColor); 
   noStroke();
   rect(0, height-80, width * 2, 80);
   stroke(180);
@@ -878,7 +887,7 @@ function drawRightArm(walkCycle, phoneUp) {
 }
 
 function drawLeftLeg(walkCycle, phoneUp) {
-  let legAngle = phoneUp ? 0 : sin(walkCycle) * 0.5;
+  let legAngle = sin(walkCycle) * 0.5;  // phoneUp 조건 제거
   push();
   translate(8, -20);
   translate(-8, 0);
@@ -893,7 +902,7 @@ function drawLeftLeg(walkCycle, phoneUp) {
 }
 
 function drawRightLeg(walkCycle, phoneUp) {
-  let legAngle = phoneUp ? 0 : sin(walkCycle) * 0.5;
+  let legAngle = sin(walkCycle) * 0.5;  // phoneUp 조건 제거
   push();
   translate(0, -20);
   rotate(-legAngle);
@@ -1326,13 +1335,13 @@ function mousePressed() {
   }
   
   // 친구 캐릭터 클릭 처리 (Scene 6)
-  if (currentScene === 6 && showArrow) {
+  if (currentScene === 6 && showText) {
     const friendX = width / 2 + 125;
     const friendY = height - 105;
     const clickRadius = 30;
     
     if (dist(mouseX, mouseY, friendX, friendY - 80) < clickRadius) {
-      showArrow = false;
+      showText = false;
       showSpeechBubble = true;
       speechBubbleTimer = 0; // 말풍선 타이머 초기화
       return;
@@ -1340,14 +1349,16 @@ function mousePressed() {
   }
   
   // 메인 캐릭터 클릭 처리 (Scene 6)
-  if (currentScene === 6 && showCharacterArrow) {
+  if (currentScene === 6) {
     const characterX = width/2 - 130;
     const characterY = height - 105;
     const clickRadius = 30;
     
-    if (dist(mouseX, mouseY, characterX, characterY - 80) < clickRadius) {
-      currentScene = 7;
-      return;
+    if (showSpeechBubble && millis() - speechBubbleTimer > 4000) {  // 2000에서 4000으로 변경 (친구 말풍선 2초 + 캐릭터 말풍선 2초)
+      if (mouseX > characterX - 50 && mouseX < characterX + 50 &&
+          mouseY > characterY - 100 && mouseY < characterY + 50) {
+        currentScene = 7;  // 다음 장면으로 이동
+      }
     }
   }
   
@@ -1545,51 +1556,25 @@ function drawBackView() {
   pop();
 }
 
-function drawArrow() {
-  const friendX = width / 2 + 125;
-  const friendY = height - 105;
-  const arrowLength = 80;
-  const arrowWidth = 20;
-  const arrowAngle = -PI/4; // 45도 각도로 위에서 아래로
-  
-  push();
-  translate(friendX + 30, friendY - 120);
-  rotate(arrowAngle);
-  
-  // 화살표 몸통
-  stroke(0);
-  strokeWeight(3);
-  line(arrowLength, 0, 0, 0); // 선의 방향을 반대로 변경
-  
-  // 화살표 머리 (삼각형의 방향을 반대로 변경)
-  fill(0);
-  noStroke();
-  triangle(0, 0, 
-           arrowWidth, -arrowWidth/2,
-           arrowWidth, arrowWidth/2);
-  pop();
-}
-
 function drawSpeechBubble() {
   const friendX = width / 2 + 125;
   const friendY = height - 105;
   
   push();
-  translate(friendX + 30, friendY - 80); // 말풍선 위치도 화살표와 일치하도록 조정
+  translate(friendX + 60, friendY - 80);
   
   // 말풍선 본체
   fill(255);
-  stroke(0);
-  strokeWeight(2);
+  noStroke();
   rect(0, -40, 120, 60, 10);
   
-  // 말풍선 꼬리
+  // 말풍선 꼬
   fill(255);
   noStroke();
   beginShape();
   vertex(0, 0);
-  vertex(-20, -20);
-  vertex(0, -40);
+  vertex(-20, -10); 
+  vertex(0, -20);  
   endShape(CLOSE);
   
   // 말풍선 텍스트
@@ -1600,31 +1585,6 @@ function drawSpeechBubble() {
   text("안녕!", 10, -10);
   text("오랜만이야!", 10, 10);
   
-  pop();
-}
-
-function drawCharacterArrow() {
-  const characterX = width/2 - 130;
-  const characterY = height - 105;
-  const arrowLength = 80;
-  const arrowWidth = 20;
-  const arrowAngle = PI/4; // 친구 캐릭터 화살표와 반대 각도로 설정
-  
-  push();
-  translate(characterX - 100, characterY - 140); // -160에서 -140으로 변경하여 20픽셀 아래로 이동
-  rotate(arrowAngle);
-  
-  // 화살표 몸통
-  stroke(0);
-  strokeWeight(3);
-  line(0, 0, arrowLength, 0);
-  
-  // 화살표 머리
-  fill(0);
-  noStroke();
-  triangle(arrowLength, 0, 
-           arrowLength - arrowWidth, -arrowWidth/2,
-           arrowLength - arrowWidth, arrowWidth/2);
   pop();
 }
 
@@ -1769,4 +1729,3 @@ function drawLyingCharacter7() {
   rectMode(CORNER);
   pop();
 } 
-
